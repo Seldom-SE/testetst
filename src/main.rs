@@ -1,16 +1,9 @@
-use std::fmt::{Debug, Formatter, Result};
+use chumsky::prelude::*;
 
-use bevy::prelude::*;
+struct Node(Vec<Node>);
 
-fn main() {}
-
-#[derive(Reflect)]
-struct MyStruct;
-
-struct MyError;
-
-impl Debug for MyError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "something occured")
-    }
+fn main() {
+    recursive(|node: Recursive<dyn Parser<&str, Node>>| {
+        node.separated_by(any()).collect().map(Node)
+    });
 }
