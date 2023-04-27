@@ -1,34 +1,39 @@
-use chumsky::prelude::*;
+use std::mem::MaybeUninit;
 
-#[derive(Debug)]
-pub struct Values;
-
-pub fn parser<'a>() -> impl Parser<'a, &'a str, Values, extra::Err<Simple<'a, char>>> {
-    let comments = just("//").ignored().repeated();
-
-    any()
-        .ignored()
-        .padded_by(comments.repeated())
-        .repeated()
-        .collect::<Vec<_>>()
-        .map(|_| Values)
+fn testtest() -> (i32, i32) {
+    let mut x: (MaybeUninit<i32>, MaybeUninit<i32>) =
+        (MaybeUninit::uninit(), MaybeUninit::uninit());
+    x.0.write(1);
+    x.1.write(2);
+    unsafe { (x.0.assume_init(), x.1.assume_init()) }
 }
 
-fn main() {
-    let src = "Would you rather have a CurseForge or a hex editor?";
+fn testtest2() -> (i32, i32) {
+    let x0: i32;
+    let x1: i32;
 
-    println!("{src}");
+    x0 = 1;
+    x1 = 2;
 
-    println!("Creating parser...");
-    let parser = parser().then_ignore(end());
-    println!("Parsing file...");
-    let result = parser.parse(src);
-    println!("Done!");
-
-    if let Some(value) = result.output() {
-        println!("{value:?}");
-    }
-    for error in result.errors() {
-        println!("{error}");
-    }
+    (x0, x1)
 }
+
+// fn testtest3() -> (i32, i32) {
+//     let x: (i32, i32);
+//
+//     x.0 = 1;
+//     x.1 = 2;
+//
+//     x
+// }
+
+// fn testtest4() {
+//     let x: ();
+//     x
+// }
+
+fn testtest5() {
+    let x: i32;
+}
+
+fn main() {}
