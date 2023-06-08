@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-script = { path = "../../projects/dreamthorn/mgui/script/" }
+bevy = "0.10"
+seldom_state = "0.6"
