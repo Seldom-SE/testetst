@@ -5,4 +5,5 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.10"
-seldom_state = "0.6"
+# seldom_state = "0.6"
+seldom_state = { path = "../../projects/seldom_state" }

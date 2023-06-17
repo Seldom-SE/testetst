@@ -144,8 +144,13 @@ fn init(mut commands: Commands) {
             .id()
     };
 
+    for _ in 0..200 {
+        spawn_enemy();
+    }
     let enemy = spawn_enemy();
-    spawn_enemy();
+    for _ in 0..200 {
+        spawn_enemy();
+    }
 
     commands.entity(player).insert(Player { target: enemy });
 }
@@ -156,7 +161,7 @@ fn move_player(
     time: Res<Time>,
 ) {
     players.single_mut().translation.x += time.delta_seconds()
-        * 10.
+        * 20.
         * (keys.pressed(KeyCode::Right) as i32 - keys.pressed(KeyCode::Left) as i32) as f32;
 }
 
