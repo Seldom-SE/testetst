@@ -1,175 +1,26 @@
-// In this game, the player navigates to wherever you click
-
-use bevy::{prelude::*, sprite::Anchor};
-use rand::{thread_rng, Rng};
-use seldom_map_nav::{prelude::*, set::MapNavSet};
-use seldom_state::prelude::*;
-
-#[derive(Clone, Reflect)]
-struct Click;
-
-impl OptionTrigger for Click {
-    type Param<'w, 's> = (Res<'w, Input<MouseButton>>, Res<'w, CursorPos>);
-    type Some = Vec2;
-
-    fn trigger(&self, _: Entity, (mouse, cursor_position): Self::Param<'_, '_>) -> Option<Vec2> {
-        mouse
-            .just_pressed(MouseButton::Left)
-            .then_some(())
-            .and(**cursor_position)
-    }
-}
-
-#[derive(Clone, Component, Reflect)]
-#[component(storage = "SparseSet")]
-struct Idle;
-
-#[derive(Clone, Copy, Component, Reflect)]
-#[component(storage = "SparseSet")]
-struct GoToSelection {
-    speed: f32,
-    target: Vec2,
-}
+use bevy::prelude::*;
+use bevy_xpbd_3d::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins((
-            DefaultPlugins,
-            StateMachinePlugin,
-            MapNavPlugin::<Transform>::default(),
-        ))
-        // This plugin is required for pathfinding and navigation
-        // The type parameter is the position component that you use
-        .init_resource::<CursorPos>()
+        .add_plugins((DefaultPlugins, PhysicsPlugins::default()))
         .add_systems(Startup, init)
-        .add_systems(
-            Update,
-            (update_cursor_pos, move_player.before(MapNavSet)).chain(),
-        )
         .run();
 }
 
-const MAP_SIZE: UVec2 = UVec2::new(24, 24);
-const TILE_SIZE: Vec2 = Vec2::new(32., 32.);
-// This is the radius of a square around the player that should not intersect with the terrain
-const PLAYER_CLEARANCE: f32 = 8.;
-
-fn init(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle {
-        // Centering the camera
-        transform: Transform::from_translation((MAP_SIZE.as_vec2() * TILE_SIZE / 2.).extend(999.9)),
-        ..default()
-    });
-
-    let mut rng = thread_rng();
-    // Randomly generate the tilemap
-    let tilemap = [(); (MAP_SIZE.x * MAP_SIZE.y) as usize].map(|_| match rng.gen_bool(0.8) {
-        true => Navability::Navable,
-        false => Navability::Solid,
-    });
-    let navability = |pos: UVec2| tilemap[(pos.y * MAP_SIZE.x + pos.x) as usize];
-
-    // Spawn images for the tiles
-    let tile_image = asset_server.load("tile.png");
-    let mut player_pos = default();
-    for x in 0..MAP_SIZE.x {
-        for y in 0..MAP_SIZE.y {
-            let pos = UVec2::new(x, y);
-            if let Navability::Navable = navability(pos) {
-                let pos = UVec2::new(x, y).as_vec2() * TILE_SIZE;
-                player_pos = pos;
-
-                commands.spawn(SpriteBundle {
-                    sprite: Sprite {
-                        anchor: Anchor::BottomLeft,
+fn init(mut commands: Commands) {
+    for x in -16..16 {
+        for z in -8..8 {
+            for y in -8..0 {
+                commands.spawn((
+                    SpatialBundle {
+                        transform: Transform::from_xyz(x as f32, y as f32, z as f32),
                         ..default()
                     },
-                    transform: Transform::from_translation(pos.extend(0.)),
-                    texture: tile_image.clone(),
-                    ..default()
-                });
+                    RigidBody::Static,
+                    Collider::cuboid(1., 1., 1.),
+                ));
             }
         }
     }
-
-    // Here's the important bit:
-
-    // Spawn the tilemap with a `Navmeshes` component
-    commands
-        .spawn(Navmeshes::generate(MAP_SIZE, TILE_SIZE, navability, [PLAYER_CLEARANCE]).unwrap());
-
-    // Spawn the player component. A position component is necessary. We will add `NavBundle`
-    // later.
-    commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_translation((player_pos + TILE_SIZE / 2.).extend(1.)),
-            texture: asset_server.load("player.png"),
-            ..default()
-        },
-        StateMachine::default()
-            // When the player clicks, go there
-            .trans_builder(Click, |_: &AnyState, pos| {
-                Some(GoToSelection {
-                    speed: 200.,
-                    target: pos,
-                })
-            })
-            // `DoneTrigger` triggers when the `Done` component is added to the entity. When they're
-            // done going to the selection, idle.
-            .trans::<GoToSelection>(DoneTrigger::Success, Idle)
-            .on_enter::<Idle>(|_| {
-                info!("IDLE!");
-            })
-            .on_enter::<GoToSelection>(|_| {
-                info!("GOTO!");
-            })
-            .set_trans_logging(true),
-        Player,
-        Idle,
-    ));
-}
-
-// Navigate the player to wherever you click
-fn move_player(
-    mut commands: Commands,
-    players: Query<(Entity, &GoToSelection), Added<GoToSelection>>,
-    navmesheses: Query<Entity, With<Navmeshes>>,
-) {
-    // Clicked somewhere on the screen!
-    // Add `NavBundle` to start navigating to that position
-    // If you want to write your own movement, but still want paths generated,
-    // only insert `Pathfind`.
-    for (entity, go_to_selection) in &players {
-        commands.entity(entity).insert(NavBundle {
-            pathfind: Pathfind::new(
-                navmesheses.single(),
-                PLAYER_CLEARANCE,
-                None,
-                PathTarget::Static(go_to_selection.target),
-                NavQuery::Accuracy,
-                NavPathMode::Accuracy,
-            ),
-            nav: Nav::new(go_to_selection.speed),
-        });
-    }
-}
-
-// The code after this comment is not related to `seldom_map_nav`
-
-#[derive(Component)]
-struct Player;
-
-#[derive(Default, Deref, DerefMut, Resource)]
-struct CursorPos(Option<Vec2>);
-
-fn update_cursor_pos(
-    cameras: Query<(&Camera, &GlobalTransform)>,
-    windows: Query<&Window>,
-    mut position: ResMut<CursorPos>,
-) {
-    let (camera, transform) = cameras.single();
-    **position = windows
-        .single()
-        .cursor_position()
-        .and_then(|cursor_pos| camera.viewport_to_world_2d(transform, cursor_pos));
 }
