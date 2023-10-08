@@ -5,4 +5,7 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.11"
-bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap.git" }
+bevy_ecs_tilemap = "0.11"
+rand = "0.8"
+seldom_map_nav = { path = "../../projects/seldom_map_nav", features = [ "state", "log" ] }
+seldom_state = "0.7"
