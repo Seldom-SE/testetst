@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.11.0"
-bevy_xpbd_3d = { git = "https://github.com/Jondolf/bevy_xpbd", rev = "601efab" }
+seldom_pixel = { path = "../../projects/seldom_pixel" }
