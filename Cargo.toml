@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = "0.12.1"
-bevy_xpbd_3d = "0.3.2"
-serde = "1.0"
-serde_json = "1.0"
+bevy = { version = "0.13.0", default-features = false }
 
+[dependencies.leafwing-input-manager]
+git = "https://github.com/Shute052/leafwing-input-manager"
+rev = "2b069dd"
+default-features = false
