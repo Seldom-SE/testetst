@@ -1,12 +1,13 @@
 [package]
-name = "testetst"
+name = "horror_roguelike"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.13.0", default-features = false }
+bevy = { version = "0.13.0", features = ["asset_processor"] }
+wgpu-types = { version = "0.19.0" }
 
-[dependencies.leafwing-input-manager]
-git = "https://github.com/Shute052/leafwing-input-manager"
-rev = "2b069dd"
-default-features = false
+[features]
+default = ["postproc", "watcher"]
+postproc = []
+watcher = ["bevy/embedded_watcher", "bevy/file_watcher"]
