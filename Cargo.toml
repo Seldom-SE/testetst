@@ -1,13 +1,8 @@
 [package]
-name = "horror_roguelike"
+name = "testetst"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.13.0", features = ["asset_processor"] }
-wgpu-types = { version = "0.19.0" }
+bevy = "0.13.1"
 
-[features]
-default = ["postproc", "watcher"]
-postproc = []
-watcher = ["bevy/embedded_watcher", "bevy/file_watcher"]
