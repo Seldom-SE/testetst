@@ -1,5 +1,5 @@
 [package]
-name = "testetst"
+name = "horror_roguelike"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,7 @@ edition = "2021"
 bevy = "0.13.2"
 bevy_rapier3d = { version = "0.25.0", features = ["debug-render-3d"] }
 
+[features]
+default = ["postproc", "watcher"]
+postproc = []
+watcher = ["bevy/embedded_watcher", "bevy/file_watcher"]
