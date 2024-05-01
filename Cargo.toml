@@ -5,6 +5,4 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.13.2"
-bevy_rapier3d = "0.25.0"
-bevy_editor_pls = "0.8.0"
 
