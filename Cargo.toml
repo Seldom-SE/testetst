@@ -1,8 +1,22 @@
 [package]
-name = "horror_roguelike"
-version = "0.1.0"
+name = "testetst"
+version = "0.0.1-alpha.1"
 edition = "2021"
 
 [dependencies]
-bevy = "0.13.2"
+serde = "1.0"
+
+[dependencies.bevy]
+version = "0.13.2"
+default-features = false
+features = [
+    "bevy_winit",
+    "x11",
+    "png",
+    "bevy_ui",
+    "bevy_audio",
+    "vorbis",
+    "asset_processor",
+    "multi-threaded",
+]
 
