@@ -1,22 +1,8 @@
 [package]
 name = "testetst"
-version = "0.0.1-alpha.1"
+version = "0.0.1"
 edition = "2021"
-
-[dependencies]
-serde = "1.0"
 
 [dependencies.bevy]
 version = "0.13.2"
-default-features = false
-features = [
-    "bevy_winit",
-    "x11",
-    "png",
-    "bevy_ui",
-    "bevy_audio",
-    "vorbis",
-    "asset_processor",
-    "multi-threaded",
-]
-
+features = ["basis-universal"]
