@@ -4,5 +4,6 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
+crossbeam-channel = "0.5.13"
 bevy = "0.13.2"
-seldom_pixel = { git = "https://github.com/Seldom-SE/seldom_pixel", rev = "a1c7638" }
+seldom_pixel = { path = "../seldom_pixel" }
