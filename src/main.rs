@@ -36,7 +36,8 @@ fn main() {
     let render_app = app
         .add_plugins((
             DefaultPlugins.set(ImagePlugin::default_nearest()),
-            PxPlugin::<Layer>::new(ScreenSize::MinPixels(10_000), "palette.palette.png"),
+            PxPlugin::<Layer>::new(ScreenSize::MinPixels(10_000), "palette.palette.png")
+                .with_render_layers(RenderLayers::layer(1)),
         ))
         .insert_resource(RenderReceiver(receiver))
         .insert_resource(Msaa::Off)
@@ -129,33 +130,26 @@ fn init(
             ..default()
         },
         Cube,
-        RenderLayers::layer(1),
     ));
 
-    commands.spawn((
-        PointLightBundle {
-            transform: Transform::from_xyz(0., 0., 10.),
+    commands.spawn(PointLightBundle {
+        transform: Transform::from_xyz(0., 0., 10.),
+        ..default()
+    });
+
+    commands.spawn(Camera3dBundle {
+        camera: Camera {
+            order: -1,
+            // render to image
+            target: render_target_image_handle.into(),
+            clear_color: Color::WHITE.into(),
             ..default()
         },
-        RenderLayers::layer(1),
-    ));
+        transform: Transform::from_xyz(0., 0., 15.).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
 
-    commands.spawn((
-        Camera3dBundle {
-            camera: Camera {
-                order: -1,
-                // render to image
-                target: render_target_image_handle.into(),
-                clear_color: Color::WHITE.into(),
-                ..default()
-            },
-            transform: Transform::from_xyz(0., 0., 15.).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        },
-        RenderLayers::layer(1),
-    ));
-
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn((Camera2dBundle::default(), RenderLayers::layer(1)));
 }
 
 /// Used by `ImageCopyDriver` for copying from render target to buffer
