@@ -4,6 +4,7 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-crossbeam-channel = "0.5.13"
-bevy = "0.13.2"
-seldom_pixel = { path = "../seldom_pixel" }
+bevy = "0.13.0"
+
+[features]
+default = ["bevy/asset_processor"]
