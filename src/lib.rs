@@ -4,7 +4,7 @@ use bevy::{
     color::palettes::basic::*,
     input::{gestures::RotationGesture, touch::TouchPhase},
     prelude::*,
-    window::{AppLifecycle, WindowMode},
+    window::WindowMode,
 };
 
 // the `bevy_main` proc_macro generates the required boilerplate for iOS and Android
@@ -22,8 +22,8 @@ fn main() {
         }),
         ..default()
     }))
-    .add_systems(Startup, (setup_scene, setup_music))
-    .add_systems(Update, (touch_camera, button_handler, handle_lifetime))
+    .add_systems(Startup, setup_scene)
+    .add_systems(Update, (touch_camera, button_handler))
     .run();
 }
 
@@ -156,32 +156,6 @@ fn button_handler(
             Interaction::None => {
                 *color = WHITE.into();
             }
-        }
-    }
-}
-
-fn setup_music(asset_server: Res<AssetServer>, mut commands: Commands) {
-    commands.spawn(AudioBundle {
-        source: asset_server.load("sounds/Windless Slopes.ogg"),
-        settings: PlaybackSettings::LOOP,
-    });
-}
-
-// Pause audio when app goes into background and resume when it returns.
-// This is handled by the OS on iOS, but not on Android.
-fn handle_lifetime(
-    mut lifecycle_events: EventReader<AppLifecycle>,
-    music_controller: Query<&AudioSink>,
-) {
-    let Ok(music_controller) = music_controller.get_single() else {
-        return;
-    };
-
-    for event in lifecycle_events.read() {
-        match event {
-            AppLifecycle::Idle | AppLifecycle::WillSuspend | AppLifecycle::WillResume => {}
-            AppLifecycle::Suspended => music_controller.pause(),
-            AppLifecycle::Running => music_controller.play(),
         }
     }
 }

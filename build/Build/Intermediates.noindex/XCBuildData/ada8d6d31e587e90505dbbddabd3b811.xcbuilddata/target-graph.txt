@@ -1,4 +1,0 @@
-Target dependency graph (2 targets)
-Target 'bevy_mobile_example' in project 'bevy_mobile_example'
-➜ Explicit dependency on target 'cargo_ios' in project 'bevy_mobile_example'
-Target 'cargo_ios' in project 'bevy_mobile_example' (no dependencies)
