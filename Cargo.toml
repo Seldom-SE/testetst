@@ -9,7 +9,10 @@ license = "MIT OR Apache-2.0"
 
 [lib]
 name = "bevy_mobile_example"
-crate-type = ["staticlib", "cdylib"]
+crate-type = ["staticlib", "cdylib", "lib"]
+
+[[bin]]
+name = "bevy_mobile_example"
 
 [dependencies]
 bevy = "0.14.0"
@@ -36,3 +39,6 @@ label = "Bevy Example"
 [package.metadata.docs.rs]
 rustdoc-args = ["-Zunstable-options"]
 all-features = true
+
+[features]
+preprocess = ["bevy/asset_processor"]
