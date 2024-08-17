@@ -1,19 +1,19 @@
-use bevy::prelude::*;
+fn main() {}
 
-fn main() {
-    App::new()
-        .add_plugins(DefaultPlugins.set(AssetPlugin {
-            mode: AssetMode::Processed,
-            ..default()
-        }))
-        .add_systems(Startup, setup)
-        .run();
+pub trait System: 'static {
+    type In;
 }
 
-#[derive(Resource)]
-#[allow(dead_code)]
-struct MyHandle(Handle<Image>);
+impl<'a> System for &'a () {
+    type In = &'a ();
+}
 
-fn setup(mut cmds: Commands, assets: Res<AssetServer>) {
-    cmds.insert_resource(MyHandle(assets.load::<Image>("square.png")));
+trait CloneSystem: System {
+    fn dyn_clone(&self) -> Box<dyn CloneSystem<In = Self::In>>;
+}
+
+impl<I> Clone for Box<dyn CloneSystem<In = I>> {
+    fn clone(&self) -> Self {
+        self.dyn_clone()
+    }
 }

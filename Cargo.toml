@@ -2,6 +2,3 @@
 name = "testetst"
 version = "0.0.1"
 edition = "2021"
-
-[dependencies]
-bevy = { version = "0.14.0", features = ["asset_processor", "basis-universal"] }
