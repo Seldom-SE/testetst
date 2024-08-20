@@ -1,19 +1,18 @@
-fn main() {}
+fn my_static_fn(&(): &()) {}
 
-pub trait System: 'static {
-    type In;
+fn main() {
+    accepts_static(my_static_fn);
+
+    let param = ();
+    accepts_fn_with_param(my_static_fn, &param);
 }
 
-impl<'a> System for &'a () {
-    type In = &'a ();
-}
+fn accepts_static<S: 'static>(_: S) {}
 
-trait CloneSystem: System {
-    fn dyn_clone(&self) -> Box<dyn CloneSystem<In = Self::In>>;
-}
-
-impl<I> Clone for Box<dyn CloneSystem<In = I>> {
-    fn clone(&self) -> Self {
-        self.dyn_clone()
-    }
+fn accepts_fn_with_param<P>(f: fn(P), p: P)
+where
+    fn(P): 'static,
+{
+    f(p);
+    accepts_static(f);
 }
