@@ -4,3 +4,6 @@ Cargo.lock
 /test_images
 /trace-*.json
 /*.tracy
+/build
+/assets/*
+!/assets/0.png
