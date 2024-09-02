@@ -23,7 +23,7 @@ fn setup_scene(mut commands: Commands, assets: Res<AssetServer>) {
                 align_self: AlignSelf::Center,
                 justify_self: JustifySelf::Center,
                 width: Val::Px(80.),
-                height: Val::Px(50.),
+                height: Val::Px(40.),
                 // This height doesn't repro the bug
                 // height: Val::Px(50.),
                 ..default()
