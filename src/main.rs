@@ -1,14 +1,8 @@
-use bevy::{prelude::*, window::WindowResolution};
+use bevy::prelude::*;
 
 pub fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                resolution: WindowResolution::new(400., 196.),
-                ..default()
-            }),
-            ..default()
-        }))
+        .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup_scene)
         .run();
 }
@@ -28,8 +22,10 @@ fn setup_scene(mut commands: Commands, assets: Res<AssetServer>) {
             style: Style {
                 align_self: AlignSelf::Center,
                 justify_self: JustifySelf::Center,
-                width: Val::Percent(20.),
-                height: Val::Percent(20.),
+                width: Val::Px(80.),
+                height: Val::Px(50.),
+                // This height doesn't repro the bug
+                // height: Val::Px(50.),
                 ..default()
             },
             ..default()
