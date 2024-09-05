@@ -79,16 +79,19 @@ fn draw_shapes(
 
         let width = 10.;
         let height = 1.;
+        let right = width / 2.;
+        let left = -right;
 
         // Background
         painter.rect(Vec2::new(width, height));
 
         // Health
         painter.color = if log { Srgba::GREEN } else { Srgba::RED }.into();
+        painter.translate(Vec3::X * left * 0.5);
         // Draw this shape closer to the camera. The 50 makes sure this shape is well in front of
         // the previous.
         painter.transform.translation += layer_dir * 50.;
-        painter.rect(Vec2::new(width, height));
+        painter.rect(Vec2::new(width / 2., height));
 
         if log {
             info!(
