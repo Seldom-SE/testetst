@@ -1,189 +1,56 @@
-//! A 3d Scene with a button and playing sound.
+use std::time::Duration;
 
-use bevy::{
-    color::palettes::basic::*,
-    input::{gestures::RotationGesture, touch::TouchPhase},
-    log::{Level, LogPlugin},
-    prelude::*,
-    window::{AppLifecycle, WindowMode},
-    winit::WinitSettings,
-};
+use bevy::{color::palettes::css::DARK_GRAY, prelude::*, winit::WinitSettings};
 
-// the `bevy_main` proc_macro generates the required boilerplate for iOS and Android
 #[bevy_main]
 fn main() {
-    let mut app = App::new();
-    app.add_plugins(
-        DefaultPlugins
-            .set(LogPlugin {
-                // This will show some log events from Bevy to the native logger.
-                level: Level::DEBUG,
-                filter: "wgpu=error,bevy_render=info,bevy_ecs=trace".to_string(),
-                ..Default::default()
-            })
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    resizable: false,
-                    mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
-                    // on iOS, gestures must be enabled.
-                    // This doesn't work on Android
-                    recognize_rotation_gesture: true,
-                    ..default()
-                }),
+    App::new()
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(bevy::window::Window {
+                resizable: false,
+                mode: bevy::window::WindowMode::Fullscreen, // (MonitorSelection::Primary),
                 ..default()
             }),
-    )
-    // Make the winit loop wait more aggressively when no user input is received
-    // This can help reduce cpu usage on mobile devices
-    .insert_resource(WinitSettings::mobile())
-    .add_systems(Startup, (setup_scene, setup_music))
-    .add_systems(Update, (touch_camera, button_handler, handle_lifetime))
-    .run();
-}
-
-fn touch_camera(
-    window: Single<&Window>,
-    mut touches: EventReader<TouchInput>,
-    mut camera_transform: Single<&mut Transform, With<Camera3d>>,
-    mut last_position: Local<Option<Vec2>>,
-    mut rotations: EventReader<RotationGesture>,
-) {
-    for touch in touches.read() {
-        if touch.phase == TouchPhase::Started {
-            *last_position = None;
-        }
-        if let Some(last_position) = *last_position {
-            **camera_transform = Transform::from_xyz(
-                camera_transform.translation.x
-                    + (touch.position.x - last_position.x) / window.width() * 5.0,
-                camera_transform.translation.y,
-                camera_transform.translation.z
-                    + (touch.position.y - last_position.y) / window.height() * 5.0,
-            )
-            .looking_at(Vec3::ZERO, Vec3::Y);
-        }
-        *last_position = Some(touch.position);
-    }
-    // Rotation gestures only work on iOS
-    for rotation in rotations.read() {
-        let forward = camera_transform.forward();
-        camera_transform.rotate_axis(forward, rotation.0 / 10.0);
-    }
-}
-
-/// set up a simple 3D scene
-fn setup_scene(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // plane
-    commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(5.0, 5.0))),
-        MeshMaterial3d(materials.add(Color::srgb(0.1, 0.2, 0.1))),
-    ));
-    // cube
-    commands.spawn((
-        Mesh3d(meshes.add(Cuboid::default())),
-        MeshMaterial3d(materials.add(Color::srgb(0.5, 0.4, 0.3))),
-        Transform::from_xyz(0.0, 0.5, 0.0),
-    ));
-    // sphere
-    commands.spawn((
-        Mesh3d(meshes.add(Sphere::new(0.5).mesh().ico(4).unwrap())),
-        MeshMaterial3d(materials.add(Color::srgb(0.1, 0.4, 0.8))),
-        Transform::from_xyz(1.5, 1.5, 1.5),
-    ));
-    // light
-    commands.spawn((
-        PointLight {
-            intensity: 1_000_000.0,
-            // Shadows makes some Android devices segfault, this is under investigation
-            // https://github.com/bevyengine/bevy/issues/8214
-            #[cfg(not(target_os = "android"))]
-            shadows_enabled: true,
             ..default()
-        },
-        Transform::from_xyz(4.0, 8.0, 4.0),
-    ));
-    // camera
-    commands.spawn((
-        Camera3d::default(),
-        Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-        // MSAA makes some Android devices panic, this is under investigation
-        // https://github.com/bevyengine/bevy/issues/8229
-        #[cfg(target_os = "android")]
-        Msaa::Off,
-    ));
-
-    // Test ui
-    commands
-        .spawn((
-            Button,
-            Node {
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                position_type: PositionType::Absolute,
-                left: Val::Px(50.0),
-                right: Val::Px(50.0),
-                bottom: Val::Px(50.0),
-                ..default()
+        }))
+        .insert_resource(WinitSettings {
+            focused_mode: bevy::winit::UpdateMode::Reactive {
+                wait: Duration::from_secs_f32(1.0 / 60.0),
+                react_to_device_events: false,
+                react_to_user_events: false,
+                react_to_window_events: false,
             },
-        ))
-        .with_child((
-            Text::new("Test Button"),
-            TextFont {
-                font_size: 30.0,
-                ..default()
-            },
-            TextColor::BLACK,
-            TextLayout::new_with_justify(JustifyText::Center),
-        ));
+            ..Default::default()
+        })
+        .add_systems(Startup, init)
+        .add_systems(Update, handle_press)
+        .run();
 }
 
-fn button_handler(
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
+#[derive(Resource, Deref)]
+struct MySound(Handle<AudioSource>);
+
+fn init(asset_server: Res<AssetServer>, mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
+    commands.insert_resource(MySound(asset_server.load("sounds/sound.ogg")));
+}
+
+fn handle_press(
+    my_sound: Res<MySound>,
+    mut clear_color: ResMut<ClearColor>,
+    touches: Res<Touches>,
+    mut cmds: Commands,
 ) {
-    for (interaction, mut color) in &mut interaction_query {
-        match *interaction {
-            Interaction::Pressed => {
-                *color = BLUE.into();
-            }
-            Interaction::Hovered => {
-                *color = GRAY.into();
-            }
-            Interaction::None => {
-                *color = WHITE.into();
-            }
-        }
+    if touches.any_just_pressed() {
+        cmds.spawn(AudioBundle {
+            source: (*my_sound).clone(),
+            ..default()
+        });
     }
-}
 
-fn setup_music(asset_server: Res<AssetServer>, mut commands: Commands) {
-    commands.spawn((
-        AudioPlayer::new(asset_server.load("sounds/Windless Slopes.ogg")),
-        PlaybackSettings::LOOP,
-    ));
-}
-
-// Pause audio when app goes into background and resume when it returns.
-// This is handled by the OS on iOS, but not on Android.
-fn handle_lifetime(
-    mut lifecycle_events: EventReader<AppLifecycle>,
-    music_controller: Query<&AudioSink>,
-) {
-    let Ok(music_controller) = music_controller.get_single() else {
-        return;
+    **clear_color = if touches.first_pressed_position().is_some() {
+        Color::WHITE
+    } else {
+        DARK_GRAY.into()
     };
-
-    for event in lifecycle_events.read() {
-        match event {
-            AppLifecycle::Idle | AppLifecycle::WillSuspend | AppLifecycle::WillResume => {}
-            AppLifecycle::Suspended => music_controller.pause(),
-            AppLifecycle::Running => music_controller.play(),
-        }
-    }
 }

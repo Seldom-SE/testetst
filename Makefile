@@ -6,7 +6,7 @@ ifndef DEVICE_ID
 endif
 
 run: install
-	xcrun simctl launch --console $(DEVICE) org.bevyengine.example
+	xcrun simctl launch --console $(DEVICE) com.seldom.testetst
 
 boot-sim:
 	xcrun simctl boot $(DEVICE) || true

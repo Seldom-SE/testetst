@@ -3,16 +3,17 @@ name = "bevy_mobile_example"
 # Version is required by `cargo-apk`, though this value will never change.
 version = "0.0.0"
 edition = "2021"
-description = "Example for building an iOS or Android app with Bevy"
 publish = false
-license = "MIT OR Apache-2.0"
 
 [lib]
 name = "bevy_mobile_example"
 crate-type = ["staticlib", "cdylib"]
 
+[profile.dev.package."*"]
+opt-level = 3
+
 [dependencies]
-bevy = "0.15"
+bevy = "0.14"
 
 [target.aarch64-apple-ios-sim.dependencies]
-bevy = { version = "0.15", features = ["ios_simulator"] }
+bevy = { version = "0.14", features = ["ios_simulator"] }
